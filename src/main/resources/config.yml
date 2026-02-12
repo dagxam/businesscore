@@ -1,0 +1,148 @@
+# ═══════════════════════════════════════
+#       BusinessCore — Configuration
+# ═══════════════════════════════════════
+
+# ─── General ───
+prefix: "&6&l[Server]&r"
+currency-symbol: "₽"
+
+# ─── Economy ───
+start-money: 100
+baltop-limit: 10
+
+# ─── Timers ───
+authme-gender-check-seconds: 2
+authme-gender-menu-delay-seconds: 2
+skin-update-interval-seconds: 30
+
+# ─── Skin command template ───
+# %skin% = skin name, %player% = player name
+skin-set-cmd: "skin set %skin% %player%"
+
+# ─── VIP shop required groups ───
+vip-shop-groups:
+  - "official"
+  - "military"
+  - "inspector"
+  - "minister"
+  - "prime_minister"
+  - "president"
+
+# ─── Rank thresholds ───
+ranks:
+  resident:
+    points: 20
+    display: "&a&lЖитель"
+  worker:
+    points: 75
+    display: "&6&lРабочий"
+  police:
+    points: 150
+    display: "&9&lПолиция"
+  official:
+    points: 250
+    display: "&b&lЧиновник"
+  military:
+    points: 350
+    display: "&2&lВоенный"
+  inspector:
+    points: 500
+    display: "&3&lИнспектор"
+  minister:
+    points: 750
+    display: "&5&lМинистр"
+
+# ─── Group priority (highest first) ───
+group-priority:
+  - "president"
+  - "prime_minister"
+  - "minister"
+  - "inspector"
+  - "military"
+  - "official"
+  - "police"
+  - "worker"
+  - "resident"
+
+# ─── Skins per group/gender ───
+skins:
+  president:
+    male: "PresidentMale"
+    female: "PresidentFemale"
+  prime_minister:
+    male: "PrimeMale"
+    female: "PrimeFemale"
+  minister:
+    male: "MinisterMale"
+    female: "MinisterFemale"
+  inspector:
+    male: "InspectorMale"
+    female: "InspectorFemale"
+  military:
+    male: "MilitaryMale"
+    female: "MilitaryFemale"
+  official:
+    male: "OfficialMale"
+    female: "OfficialFemale"
+  police:
+    male: "PoliceMale"
+    female: "PoliceFemale"
+  worker:
+    male: "WorkerMale"
+    female: "WorkerFemale"
+  resident:
+    male: "ResidentMale"
+    female: "ResidentFemale"
+  default:
+    male: "Steve"
+    female: "Alex"
+
+# ─── Mob point rewards ───
+mob-points:
+  # Bosses
+  wither: 5
+  ender_dragon: 10
+  warden: 5
+  elder_guardian: 3
+  # Player kill
+  player: 10
+  # Mobs 1 point per 1 kill
+  skeleton: 1
+  stray: 1
+  wither_skeleton: 1
+  creeper: 1
+  enderman: 1
+  witch: 1
+  slime: 1
+  magma_cube: 1
+  phantom: 1
+  blaze: 1
+  ghast: 1
+  guardian: 1
+  silverfish: 1
+  endermite: 1
+  shulker: 1
+  hoglin: 1
+  zoglin: 1
+  piglin: 1
+  piglin_brute: 1
+  zombified_piglin: 1
+  pillager: 1
+  vindicator: 1
+  evoker: 1
+  ravager: 2
+  vex: 1
+  breeze: 1
+  bogged: 1
+
+# Mobs requiring 2 kills for 1 point
+mob-double-kills:
+  - "zombie"
+  - "husk"
+  - "drowned"
+  - "zombie_villager"
+  - "spider"
+  - "cave_spider"
+
+# Mining: diamonds needed for 1 point
+diamond-mine-threshold: 3
