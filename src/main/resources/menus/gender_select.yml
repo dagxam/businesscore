@@ -1,0 +1,79 @@
+menu_title: '&5✦ &dВыбери свой пол &5✦'
+open_command: gendermenu
+register_command: true
+size: 27
+
+items:
+  filler:
+    material: PURPLE_STAINED_GLASS_PANE
+    display_name: ' '
+    slots:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      - 16
+      - 17
+      - 18
+      - 19
+      - 20
+      - 21
+      - 22
+      - 24
+      - 25
+      - 26
+
+  filler2:
+    material: MAGENTA_STAINED_GLASS_PANE
+    display_name: ' '
+    slots:
+      - 5
+      - 23
+
+  male:
+    material: LIGHT_BLUE_CONCRETE
+    display_name: '&b&l♂ МУЖСКОЙ'
+    lore:
+      - ''
+      - '&7▸ Ты получишь скин &fСтива'
+      - '&7▸ Префикс &b♂ &7в чате'
+      - ''
+      - '&a➤ Нажми для выбора'
+    slot: 11
+    click_commands:
+      - '[close]'
+      - '[player] selectgender male'
+
+  female:
+    material: PINK_CONCRETE
+    display_name: '&d&l♀ ЖЕНСКИЙ'
+    lore:
+      - ''
+      - '&7▸ Ты получишь скин &fАлекс'
+      - '&7▸ Префикс &d♀ &7в чате'
+      - ''
+      - '&a➤ Нажми для выбора'
+    slot: 15
+    click_commands:
+      - '[close]'
+      - '[player] selectgender female'
+
+  info:
+    material: OAK_SIGN
+    display_name: '&e&l⚠ ВАЖНО'
+    lore:
+      - ''
+      - '&fВыбери свой пол!'
+      - ''
+      - '&7Это повлияет на:'
+      - '&7▸ Твой скин в игре'
+      - '&7▸ Префикс в чате'
+      - ''
+      - '&c✖ Изменить выбор нельзя!'
+    slot: 13
