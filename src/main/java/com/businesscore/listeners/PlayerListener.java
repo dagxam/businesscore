@@ -20,6 +20,8 @@ import static com.businesscore.BusinessCore.color;
 public class PlayerListener implements Listener {
 
     private final BusinessCore plugin;
+
+    // антиспам открытия меню (на игрока)
     private final Map<UUID, Long> genderCooldown = new HashMap<>();
 
     public PlayerListener(BusinessCore plugin) {
@@ -33,12 +35,13 @@ public class PlayerListener implements Listener {
         EconomyManager eco = plugin.getEconomyManager();
         String uuid = player.getUniqueId().toString();
 
-        // Init money name mapping
+        // init mapping name
         dm.setMoneyName(uuid, player.getName());
 
-        // First join: start money
+        // first join money
         if (dm.isFirstJoin(uuid)) {
             dm.markJoined(uuid);
+
             int startMoney = plugin.getConfig().getInt("start-money", 100);
             String sym = plugin.getCurrencySymbol();
 
@@ -50,33 +53,28 @@ public class PlayerListener implements Listener {
                 player.sendMessage("");
                 player.sendMessage(color("&a&l✓ Добро пожаловать на сервер!"));
                 player.sendMessage(color("&eВам начислено: &6" + startMoney + sym));
-                player.sendMessage(color("&7Сделай шаг вперёд, чтобы выбрать пол."));
+                player.sendMessage(color("&7Сделайте шаг, чтобы выбрать пол."));
                 player.sendMessage("");
             }, 20L);
         }
 
-        // OP state for TAB refresh
         dm.setOpState(uuid, player.isOp() ? 1 : 0);
 
-        // Check rank after 1 second
+        // rank check
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (player.isOnline()) {
-                plugin.getRankManager().checkRankUp(player);
-            }
+            if (player.isOnline()) plugin.getRankManager().checkRankUp(player);
         }, 20L);
 
-        // Apply skin after 3 seconds if gender selected
+        // apply skin if already selected
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (player.isOnline() && player.hasPermission("gender.selected")) {
                 plugin.getGenderManager().setSkinByGroup(player);
             }
         }, 60L);
 
-        // Render TAB shortly after join
+        // render tab later
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (player.isOnline()) {
-                plugin.getTabManager().updatePlayer(player);
-            }
+            if (player.isOnline()) plugin.getTabManager().updatePlayer(player);
         }, 40L);
     }
 
@@ -92,27 +90,26 @@ public class PlayerListener implements Listener {
     public void onMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
 
-        // Только если реально сместился (не поворот головы)
+        // только если реально сдвинулся, а не повернул голову
         if (event.getFrom().getBlockX() == event.getTo().getBlockX()
                 && event.getFrom().getBlockY() == event.getTo().getBlockY()
                 && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
             return;
         }
 
-        // Уже выбрал пол — ничего не делаем
+        // уже выбран пол — ничего
         if (player.hasPermission("gender.selected")) return;
 
-        // Не открывать, если уже открыто меню (иначе бесконечное открытие)
+        // если меню уже открыто — не открываем снова
         if (plugin.getMenuManager().getOpenSession(player.getUniqueId()) != null) return;
 
         long now = System.currentTimeMillis();
         UUID uid = player.getUniqueId();
 
-        // антиспам: 3 секунды
+        // антиспам 3 секунды
         if (genderCooldown.containsKey(uid) && now - genderCooldown.get(uid) < 3000) return;
         genderCooldown.put(uid, now);
 
-        // Открыть меню пола
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (!player.isOnline()) return;
             plugin.getMenuManager().openMenu(player, "gender_select");
