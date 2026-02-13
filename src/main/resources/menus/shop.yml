@@ -1,0 +1,80 @@
+menu_title: '&6&lМАГАЗИН &8| &eБаланс: %skript_balance%%currency%'
+open_command: shop
+register_command: true
+size: 54
+update_interval: 5
+
+items:
+  background:
+    material: GRAY_STAINED_GLASS_PANE
+    display_name: ' '
+    slots:
+      - 0-8
+      - 9
+      - 17
+      - 18
+      - 26
+      - 27
+      - 35
+      - 36
+      - 44
+      - 45-53
+
+  balance_display:
+    material: SUNFLOWER
+    display_name: '&6&l💰 ВАШ БАЛАНС'
+    lore:
+      - ''
+      - '&fУ вас: &6%skript_balance%%currency%'
+      - ''
+      - '&7Обновляется автоматически'
+    slot: 4
+
+  close_button:
+    material: BARRIER
+    display_name: '&c&lЗАКРЫТЬ'
+    lore:
+      - '&7Нажмите, чтобы закрыть'
+    slot: 49
+    click_commands:
+      - '[close]'
+
+  to_farm:
+    material: HAY_BLOCK
+    display_name: '&a&l🌾 ФЕРМА'
+    lore:
+      - '&7Открыть раздел фермы'
+    slot: 20
+    click_commands:
+      - '[close]'
+      - '[player] shop_farm'
+
+  to_mine:
+    material: IRON_PICKAXE
+    display_name: '&8&l⛏ ШАХТА'
+    lore:
+      - '&7Открыть раздел шахты'
+    slot: 22
+    click_commands:
+      - '[close]'
+      - '[player] shop_mine'
+
+  to_lum:
+    material: OAK_SAPLING
+    display_name: '&2&l🌲 ЛЕСОПИЛКА'
+    lore:
+      - '&7Открыть раздел лесопилки'
+    slot: 24
+    click_commands:
+      - '[close]'
+      - '[player] shop_lum'
+
+  to_vip:
+    material: NETHER_STAR
+    display_name: '&d&l👑 VIP'
+    lore:
+      - '&7Открыть VIP магазин'
+    slot: 31
+    click_commands:
+      - '[close]'
+      - '[player] shop_vip'
