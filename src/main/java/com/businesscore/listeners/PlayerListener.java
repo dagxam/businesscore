@@ -3,8 +3,6 @@ package com.businesscore.listeners;
 import com.businesscore.BusinessCore;
 import com.businesscore.managers.DataManager;
 import com.businesscore.managers.EconomyManager;
-import com.businesscore.managers.GenderManager;
-import com.businesscore.managers.RankManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,10 +33,7 @@ public class PlayerListener implements Listener {
         EconomyManager eco = plugin.getEconomyManager();
         String uuid = player.getUniqueId().toString();
 
-        // Initialize money if not set
-        if (dm.getMoney(uuid) == 0.0 && dm.getMoneyName(uuid).equals(uuid)) {
-            dm.setMoney(uuid, 0);
-        }
+        // Init money name mapping
         dm.setMoneyName(uuid, player.getName());
 
         // First join: start money
@@ -55,19 +50,12 @@ public class PlayerListener implements Listener {
                 player.sendMessage("");
                 player.sendMessage(color("&a&l✓ Добро пожаловать на сервер!"));
                 player.sendMessage(color("&eВам начислено: &6" + startMoney + sym));
+                player.sendMessage(color("&7Сделай шаг вперёд, чтобы выбрать пол."));
                 player.sendMessage("");
             }, 20L);
         }
 
-        // Initialize points
-        // (already 0 by default in DataManager)
-
-        // Initialize rank
-        if (dm.getRank(uuid).equals("default") && dm.getPoints(uuid) > 0) {
-            // Will be corrected by checkRankUp
-        }
-
-        // OP state for TAB fix
+        // OP state for TAB refresh
         dm.setOpState(uuid, player.isOp() ? 1 : 0);
 
         // Check rank after 1 second
@@ -84,7 +72,7 @@ public class PlayerListener implements Listener {
             }
         }, 60L);
 
-        // Render TAB shortly after join (needs rank/gender loaded)
+        // Render TAB shortly after join
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (player.isOnline()) {
                 plugin.getTabManager().updatePlayer(player);
@@ -97,8 +85,6 @@ public class PlayerListener implements Listener {
         String uuid = event.getPlayer().getUniqueId().toString();
         plugin.getDataManager().removeOpState(uuid);
         genderCooldown.remove(event.getPlayer().getUniqueId());
-
-        // Clean up open menu session
         plugin.getMenuManager().clearOpenSession(event.getPlayer().getUniqueId());
     }
 
@@ -106,22 +92,31 @@ public class PlayerListener implements Listener {
     public void onMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
 
-        // Only trigger on actual position changes, not just looking around
+        // Только если реально сместился (не поворот головы)
         if (event.getFrom().getBlockX() == event.getTo().getBlockX()
                 && event.getFrom().getBlockY() == event.getTo().getBlockY()
                 && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) {
             return;
         }
 
-        if (!player.hasPermission("gender.selected")) {
-            UUID uid = player.getUniqueId();
-            long now = System.currentTimeMillis();
+        // Уже выбрал пол — ничего не делаем
+        if (player.hasPermission("gender.selected")) return;
 
-            if (!genderCooldown.containsKey(uid) || now - genderCooldown.get(uid) > 3000) {
-                genderCooldown.put(uid, now);
-                Bukkit.dispatchCommand(player, "gendermenu");
-                player.sendMessage(color("&e&l⚠ &eВыбери свой пол для продолжения игры!"));
-            }
-        }
+        // Не открывать, если уже открыто меню (иначе бесконечное открытие)
+        if (plugin.getMenuManager().getOpenSession(player.getUniqueId()) != null) return;
+
+        long now = System.currentTimeMillis();
+        UUID uid = player.getUniqueId();
+
+        // антиспам: 3 секунды
+        if (genderCooldown.containsKey(uid) && now - genderCooldown.get(uid) < 3000) return;
+        genderCooldown.put(uid, now);
+
+        // Открыть меню пола
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (!player.isOnline()) return;
+            plugin.getMenuManager().openMenu(player, "gender_select");
+            player.sendMessage(color("&e&l⚠ &eВыбери свой пол для продолжения игры!"));
+        });
     }
 }
