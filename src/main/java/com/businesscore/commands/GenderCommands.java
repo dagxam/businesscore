@@ -1,142 +1,201 @@
 package com.businesscore.commands;
 
 import com.businesscore.BusinessCore;
-import com.businesscore.managers.GenderManager;
 import org.bukkit.Bukkit;
-import org.bukkit.command.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import java.util.List;
 
 import static com.businesscore.BusinessCore.color;
 
 public class GenderCommands implements CommandExecutor {
 
     private final BusinessCore plugin;
-    private final GenderManager gm;
 
     public GenderCommands(BusinessCore plugin) {
         this.plugin = plugin;
-        this.gm = plugin.getGenderManager();
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        switch (cmd.getName().toLowerCase()) {
-            case "selectgender" -> cmdSelectGender(sender, args);
-            case "gendermenu" -> cmdGenderMenu(sender);
-            case "mygender" -> cmdMyGender(sender);
-            case "resetmygender" -> cmdResetMyGender(sender);
-            case "resetgender" -> cmdResetGender(sender, args);
-            case "updateskin" -> cmdUpdateSkin(sender, args);
-            case "genderskin" -> cmdGenderSkin(sender, args);
-            case "genderconfig" -> cmdGenderConfig(sender);
+
+        String name = cmd.getName().toLowerCase();
+
+        switch (name) {
+
+            case "gendermenu": {
+                if (!(sender instanceof Player player)) return true;
+                plugin.getMenuManager().openMenu(player, "gender_select");
+                return true;
+            }
+
+            case "selectgender": {
+                if (!(sender instanceof Player player)) return true;
+
+                if (player.hasPermission("gender.selected")) {
+                    player.sendMessage(color("&c✗ Пол уже выбран. Изменить нельзя."));
+                    return true;
+                }
+
+                if (args.length < 1) {
+                    player.sendMessage(color("&cИспользование: /selectgender <male/female>"));
+                    return true;
+                }
+
+                String g = args[0].toLowerCase();
+                if (!g.equals("male") && !g.equals("female")) {
+                    player.sendMessage(color("&cИспользование: /selectgender <male/female>"));
+                    return true;
+                }
+
+                // ставим пермы через LuckPerms командой
+                // male: gender.male + gender.selected
+                // female: gender.female + gender.selected
+                if (g.equals("male")) {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " permission set gender.male true");
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " permission set gender.selected true");
+                } else {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " permission set gender.female true");
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " permission set gender.selected true");
+                }
+
+                // сохраняем текущую группу для skin-update логики (uuid)
+                String uuid = player.getUniqueId().toString();
+                String currentGroup = plugin.getGenderManager().getPlayerGroup(player);
+                plugin.getDataManager().setGenderGroup(uuid, currentGroup);
+
+                player.sendMessage(color("&a✓ Пол выбран: &e" + (g.equals("male") ? "Мужской" : "Женский")));
+
+                // обновим TAB
+                Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getTabManager().updatePlayer(player), 10L);
+
+                // применим скин (если можно)
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (player.isOnline()) plugin.getGenderManager().setSkinByGroup(player);
+                }, 40L);
+
+                return true;
+            }
+
+            case "mygender": {
+                if (!(sender instanceof Player player)) return true;
+
+                if (player.hasPermission("gender.male")) {
+                    player.sendMessage(color("&eВаш пол: &b&l♂ Мужской"));
+                } else if (player.hasPermission("gender.female")) {
+                    player.sendMessage(color("&eВаш пол: &d&l♀ Женский"));
+                } else {
+                    player.sendMessage(color("&eВаш пол: &7не выбран"));
+                }
+                return true;
+            }
+
+            case "resetmygender": {
+                if (!(sender instanceof Player player)) return true;
+                if (!player.hasPermission("gender.reset.self")) {
+                    player.sendMessage(color("&cНет прав."));
+                    return true;
+                }
+                resetGenderFor(player, player);
+                return true;
+            }
+
+            case "resetgender": {
+                if (!sender.hasPermission("gender.reset.other")) {
+                    sender.sendMessage(color("&cНет прав."));
+                    return true;
+                }
+                if (args.length < 1) {
+                    sender.sendMessage(color("&cИспользование: /resetgender <player>"));
+                    return true;
+                }
+
+                Player target = Bukkit.getPlayerExact(args[0]);
+                if (target == null) {
+                    sender.sendMessage(color("&cИгрок не найден (должен быть онлайн)."));
+                    return true;
+                }
+
+                resetGenderFor(target, sender);
+                return true;
+            }
+
+            case "updateskin": {
+                if (!sender.hasPermission("gender.updateskin")) {
+                    sender.sendMessage(color("&cНет прав."));
+                    return true;
+                }
+
+                Player target;
+                if (args.length >= 1) {
+                    target = Bukkit.getPlayerExact(args[0]);
+                    if (target == null) {
+                        sender.sendMessage(color("&cИгрок не найден (должен быть онлайн)."));
+                        return true;
+                    }
+                } else {
+                    if (!(sender instanceof Player p)) {
+                        sender.sendMessage(color("&cИспользование: /updateskin <player>"));
+                        return true;
+                    }
+                    target = p;
+                }
+
+                plugin.getGenderManager().setSkinByGroup(target);
+                sender.sendMessage(color("&a✓ Скин обновлён для " + target.getName()));
+                return true;
+            }
+
+            case "genderskin": {
+                if (!sender.hasPermission("gender.admin")) {
+                    sender.sendMessage(color("&cНет прав."));
+                    return true;
+                }
+                sender.sendMessage(color("&eЭта команда зависит от реализации GenderManager (skins config)."));
+                sender.sendMessage(color("&7Если нужно — скажи, я добавлю хранение в config.yml."));
+                return true;
+            }
+
+            case "genderconfig": {
+                if (!sender.hasPermission("gender.admin")) {
+                    sender.sendMessage(color("&cНет прав."));
+                    return true;
+                }
+                sender.sendMessage(color("&eSkinsRestorer: " + (plugin.isSkinsRestorerAvailable() ? "&aесть" : "&cнет")));
+                sender.sendMessage(color("&ePlaceholderAPI: " + (plugin.isPlaceholderApiAvailable() ? "&aесть" : "&cнет")));
+                return true;
+            }
         }
+
         return true;
     }
 
-    private void cmdSelectGender(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) { sender.sendMessage("Only players!"); return; }
-        if (args.length < 1) {
-            player.sendMessage(color("&c&l✖ &cИспользуй: /selectgender male или /selectgender female"));
-            return;
+    private void resetGenderFor(Player target, CommandSender byWhom) {
+        // снимаем пермы
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + target.getName() + " permission unset gender.male");
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + target.getName() + " permission unset gender.female");
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + target.getName() + " permission unset gender.selected");
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + target.getName() + " permission unset gender.menu.opened");
+
+        // очищаем сохранение группы (uuid)
+        plugin.getDataManager().setGenderGroup(target.getUniqueId().toString(), "");
+
+        // обновляем TAB
+        Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getTabManager().updatePlayer(target), 10L);
+
+        // если SkinsRestorer есть — попробуем очистить скин
+        if (plugin.isSkinsRestorerAvailable()) {
+            // команды могут отличаться в разных версиях SR, но обычно работает:
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "skin clear " + target.getName());
         }
-        gm.selectGender(player, args[0]);
-    }
 
-    private void cmdGenderMenu(CommandSender sender) {
-        if (!(sender instanceof Player player)) return;
-		plugin.getMenuManager().openMenu(player, "gender_select");
-    }
-
-    private void cmdMyGender(CommandSender sender) {
-        if (!(sender instanceof Player player)) return;
-
-        if (player.hasPermission("gender.male")) {
-            player.sendMessage(color("&b&l♂ &bТвой пол: Мужской"));
-            player.sendMessage(color("&7Группа: &e" + gm.getPlayerGroup(player)));
-        } else if (player.hasPermission("gender.female")) {
-            player.sendMessage(color("&d&l♀ &dТвой пол: Женский"));
-            player.sendMessage(color("&7Группа: &e" + gm.getPlayerGroup(player)));
+        // сообщения
+        if (byWhom instanceof Player p && p.getUniqueId().equals(target.getUniqueId())) {
+            target.sendMessage(color("&a✓ Твой пол сброшен. Сделай шаг, чтобы выбрать заново."));
         } else {
-            player.sendMessage(color("&7Пол не выбран"));
+            target.sendMessage(color("&e&l⚠ &eТвой пол был сброшен. Сделай шаг, чтобы выбрать заново."));
+            byWhom.sendMessage(color("&a✓ Пол игрока " + target.getName() + " сброшен."));
         }
-    }
-
-    private void cmdResetMyGender(CommandSender sender) {
-        if (!(sender instanceof Player player)) return;
-        gm.resetGender(player);
-        player.sendMessage(color("&e&l⚠ &eТвой пол сброшен! Начни двигаться для открытия меню"));
-    }
-
-    private void cmdResetGender(CommandSender sender, String[] args) {
-        if (args.length < 1) { sender.sendMessage(color("&c/resetgender <игрок>")); return; }
-
-        Player target = Bukkit.getPlayer(args[0]);
-        if (target == null) { sender.sendMessage(color("&cИгрок не найден!")); return; }
-
-        gm.resetGender(target);
-        sender.sendMessage(color("&aПол игрока " + target.getName() + " сброшен!"));
-    }
-
-    private void cmdUpdateSkin(CommandSender sender, String[] args) {
-        Player target;
-        if (args.length > 0) {
-            target = Bukkit.getPlayer(args[0]);
-            if (target == null) { sender.sendMessage(color("&cИгрок не в сети!")); return; }
-        } else if (sender instanceof Player) {
-            target = (Player) sender;
-        } else {
-            sender.sendMessage("Specify a player!"); return;
-        }
-
-        if (target.hasPermission("gender.selected")) {
-            gm.setSkinByGroup(target);
-            sender.sendMessage(color("&aСкин обновлён для " + target.getName() + "!"));
-        } else {
-            sender.sendMessage(color("&cУ игрока не выбран пол!"));
-        }
-    }
-
-    private void cmdGenderSkin(CommandSender sender, String[] args) {
-        if (args.length < 3) {
-            sender.sendMessage(color("&cИспользуй: /genderskin <группа> <male/female> <название_скина>"));
-            return;
-        }
-
-        String group = args[0];
-        String gender = args[1].toLowerCase();
-        String skinName = args[2];
-
-        if (!gender.equals("male") && !gender.equals("female")) {
-            sender.sendMessage(color("&cИспользуй: /genderskin <группа> <male/female> <название_скина>"));
-            return;
-        }
-
-        plugin.getConfig().set("skins." + group + "." + gender, skinName);
-        plugin.saveConfig();
-
-        sender.sendMessage(color("&aСкин для группы &e" + group + " &a(пол: &e" + gender + "&a) установлен: &e" + skinName));
-    }
-
-    private void cmdGenderConfig(CommandSender sender) {
-        sender.sendMessage(color("&6&l═══════════════════════════════"));
-        sender.sendMessage(color("&e&lКонфигурация скинов:"));
-        sender.sendMessage("");
-
-        List<String> groups = plugin.getConfig().getStringList("group-priority");
-        for (String group : groups) {
-            sender.sendMessage(color("&6" + group + ":"));
-            String male = plugin.getConfig().getString("skins." + group + ".male", "не установлен");
-            String female = plugin.getConfig().getString("skins." + group + ".female", "не установлен");
-            sender.sendMessage(color("  &bМужской: &f" + male));
-            sender.sendMessage(color("  &dЖенский: &f" + female));
-        }
-
-        sender.sendMessage("");
-        sender.sendMessage(color("&6default:"));
-        sender.sendMessage(color("  &bМужской: &f" + plugin.getConfig().getString("skins.default.male", "Steve")));
-        sender.sendMessage(color("  &dЖенский: &f" + plugin.getConfig().getString("skins.default.female", "Alex")));
-        sender.sendMessage(color("&6&l═══════════════════════════════"));
     }
 }
