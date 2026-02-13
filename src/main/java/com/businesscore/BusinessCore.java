@@ -1,15 +1,26 @@
 package com.businesscore;
 
-import com.businesscore.commands.*;
+import com.businesscore.commands.EconomyCommands;
+import com.businesscore.commands.GenderCommands;
+import com.businesscore.commands.RankCommands;
+import com.businesscore.commands.ShopCommands;
 import com.businesscore.hooks.PlaceholderHook;
-import com.businesscore.listeners.*;
-import com.businesscore.managers.*;
+import com.businesscore.listeners.BlockListener;
+import com.businesscore.listeners.ChatListener;
+import com.businesscore.listeners.MenuListener;
+import com.businesscore.listeners.MobDeathListener;
+import com.businesscore.listeners.PlayerListener;
+import com.businesscore.managers.DataManager;
+import com.businesscore.managers.EconomyManager;
+import com.businesscore.managers.GenderManager;
+import com.businesscore.managers.RankManager;
+import com.businesscore.managers.TabManager;
 import com.businesscore.menus.MenuManager;
-import com.businesscore.tasks.*;
-import me.clip.placeholderapi.PlaceholderAPI;
+import com.businesscore.tasks.OpStateFixTask;
+import com.businesscore.tasks.SkinUpdateTask;
+import com.businesscore.tasks.TabUpdateTask;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.text.DecimalFormat;
@@ -40,9 +51,11 @@ public class BusinessCore extends JavaPlugin {
         // Managers
         dataManager = new DataManager(this);
         dataManager.load();
+
         economyManager = new EconomyManager(this);
         rankManager = new RankManager(this);
         genderManager = new GenderManager(this);
+
         menuManager = new MenuManager(this);
         tabManager = new TabManager(this);
 
@@ -50,7 +63,7 @@ public class BusinessCore extends JavaPlugin {
         placeholderApiAvailable = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
         skinsRestorerAvailable = Bukkit.getPluginManager().isPluginEnabled("SkinsRestorer");
 
-        // Register commands (static commands from plugin.yml)
+        // Register commands (from plugin.yml)
         registerCommands();
 
         // Load menus from YAML and register menu commands (DeluxeMenus-like)
@@ -64,11 +77,10 @@ public class BusinessCore extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new ChatListener(this), this);
 
         // Tasks
-        long genderCheckTicks = getConfig().getInt("authme-gender-check-seconds", 2) * 20L;
         long skinUpdateTicks = getConfig().getInt("skin-update-interval-seconds", 30) * 20L;
-        long tabUpdateTicks = getConfig().getInt("tab-update-interval-seconds", 2) * 20L;
+        long tabUpdateTicks = getConfig().getInt("tab.update-interval-seconds", 2) * 20L;
 
-        
+        // ⚠️ ВАЖНО: GenderCheckTask НЕ запускаем — меню пола будет открываться ТОЛЬКО при движении (PlayerListener)
         new SkinUpdateTask(this).runTaskTimer(this, skinUpdateTicks, skinUpdateTicks);
         new TabUpdateTask(this).runTaskTimer(this, 40L, tabUpdateTicks);
         new OpStateFixTask(this).runTaskTimer(this, 100L, 40L);
@@ -90,12 +102,8 @@ public class BusinessCore extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (dataManager != null) {
-            dataManager.save();
-        }
-        if (tabManager != null) {
-            tabManager.shutdown();
-        }
+        if (dataManager != null) dataManager.save();
+        if (tabManager != null) tabManager.shutdown();
         getLogger().info("BusinessCore disabled!");
     }
 
@@ -177,52 +185,42 @@ public class BusinessCore extends JavaPlugin {
 
         String out = input;
 
-        // Currency symbol
         out = out.replace("%currency%", getCurrencySymbol());
 
-        // Common
         if (player != null) {
             out = out.replace("%player%", player.getName());
             out = out.replace("%player_name%", player.getName());
             out = out.replace("%player_uuid%", player.getUniqueId().toString());
         }
 
-        // Economy placeholders
         if (player != null) {
             double bal = economyManager.getBalance(player);
             String sym = getCurrencySymbol();
             out = out.replace("%skript_balance%", formatMoney(bal));
             out = out.replace("%businesscore_money%", formatMoney(bal));
-            out = out.replace("%businesscore_skript_money%", formatMoney(bal));
             out = out.replace("%businesscore_balance%", formatMoney(bal) + sym);
-            out = out.replace("%businesscore_skript_balance%", formatMoney(bal) + sym);
         }
 
-        // Rank / points placeholders
         if (player != null) {
             String uuid = player.getUniqueId().toString();
             out = out.replace("%businesscore_points%", String.valueOf(dataManager.getPoints(uuid)));
-            out = out.replace("%businesscore_rs_points%", String.valueOf(dataManager.getPoints(uuid)));
             out = out.replace("%businesscore_rank%", dataManager.getRank(uuid));
         }
 
-        // Gender placeholders
         if (player != null) {
             String g;
             if (player.hasPermission("gender.male")) g = "§b§l♂";
             else if (player.hasPermission("gender.female")) g = "§d§l♀";
             else g = "§7?";
             out = out.replace("%businesscore_gender%", g);
-            out = out.replace("%businesscore_rs_gender%", g);
         }
 
-        // Apply PlaceholderAPI last (optional)
+        // Если PlaceholderAPI установлен — применяем дополнительно (но не обязателен)
         if (placeholderApiAvailable && player != null && out.contains("%")) {
             try {
-                out = PlaceholderAPI.setPlaceholders(player, out);
-            } catch (Throwable ignored) {
-                // If PlaceholderAPI changes, we don't want to crash.
-            }
+                Class<?> papi = Class.forName("me.clip.placeholderapi.PlaceholderAPI");
+                out = (String) papi.getMethod("setPlaceholders", Player.class, String.class).invoke(null, player, out);
+            } catch (Throwable ignored) {}
         }
 
         return out;
