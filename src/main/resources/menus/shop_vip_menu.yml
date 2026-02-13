@@ -1,0 +1,40 @@
+menu_title: '&d&l👑 VIP МАГАЗИН &8| &e%skript_balance%%currency%'
+open_command: shop_vip
+register_command: true
+size: 54
+update_interval: 2
+
+items:
+  background:
+    material: PURPLE_STAINED_GLASS_PANE
+    display_name: ' '
+    slots:
+      - 0-8
+      - 45-53
+
+  balance_display:
+    material: SUNFLOWER
+    display_name: '&6&l💰 ВАШ БАЛАНС'
+    lore:
+      - ''
+      - '&fУ вас: &6%skript_balance%%currency%'
+    slot: 4
+
+  back_to_main:
+    material: ARROW
+    display_name: '&e&l← ГЛАВНОЕ МЕНЮ'
+    lore:
+      - '&7Вернуться в основной магазин'
+    slot: 45
+    click_commands:
+      - '[close]'
+      - '[player] shop'
+
+  close_button:
+    material: BARRIER
+    display_name: '&c&lЗАКРЫТЬ'
+    lore:
+      - '&7Нажмите, чтобы закрыть'
+    slot: 49
+    click_commands:
+      - '[close]'
