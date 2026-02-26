@@ -23,9 +23,10 @@ public class SkinUpdateTask extends BukkitRunnable {
         GenderManager gm = plugin.getGenderManager();
 
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.hasPermission("gender.selected")) {
+            String uuid = player.getUniqueId().toString();
+            // Обновляем скин, только если пол уже выбран
+            if (!dm.getPlayerGender(uuid).equals("none")) {
                 String currentGroup = gm.getPlayerGroup(player);
-                String uuid = player.getUniqueId().toString();
                 String stored = dm.getGenderGroup(uuid);
 
                 if (!currentGroup.equals(stored)) {
