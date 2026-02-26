@@ -51,7 +51,7 @@ public class TabManager {
         Team team = sb.getTeam(teamName);
         if (team == null) team = sb.registerNewTeam(teamName);
 
-        // ранги
+        // ранги (берет display name из config.yml)
         String rankDisplay = getRankDisplay(player);
 
         // очки (из DataManager)
@@ -60,7 +60,7 @@ public class TabManager {
         // деньги (из EconomyManager)
         String bal = plugin.formatMoney(plugin.getEconomyManager().getBalance(player)) + plugin.getCurrencySymbol();
 
-        // формат (можешь менять цвета в config.yml)
+        // формат
         String prefix = plugin.getConfig().getString("tab.prefix", "&7[" + rankDisplay + "&7] &f");
         String suffix = plugin.getConfig().getString("tab.suffix", " &7| &e%points%⭐ &7| &6%balance%💰");
 
@@ -81,7 +81,7 @@ public class TabManager {
             team.addEntry(player.getName());
         }
 
-        // --- ВАЖНО: Устанавливаем прямо в TAB, чтобы избежать конфликтов и обрезаний ---
+        // --- ВАЖНО: Устанавливаем прямо в TAB, чтобы избежать конфликтов с другими плагинами ---
         String tabName = prefix + player.getName() + suffix;
         player.setPlayerListName(color(tabName));
     }
