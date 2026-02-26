@@ -20,6 +20,104 @@ items:
       - '&fУ вас: &6%skript_balance%%currency%'
     slot: 4
 
+  # === ТОВАРЫ ===
+  sell_wheat:
+    material: WHEAT
+    amount: 64
+    display_name: '&aПшеница'
+    lore:
+      - ''
+      - '&7Сдать &fx64 &7пшеницы'
+      - '&7Выручка: &a+150%currency%'
+      - ''
+      - '&eЛКМ &8- &7Продать стак'
+      - '&6ПКМ &8- &7Продать всё'
+    slot: 19
+    left_click_commands:
+      - '[player] skript-sell WHEAT 64 150'
+    right_click_commands:
+      - '[player] skript-sellall WHEAT 64 150'
+
+  sell_beef:
+    material: BEEF
+    amount: 64
+    display_name: '&aСырая говядина'
+    lore:
+      - ''
+      - '&7Сдать &fx64 &7говядины'
+      - '&7Выручка: &a+250%currency%'
+      - ''
+      - '&eЛКМ &8- &7Продать стак'
+      - '&6ПКМ &8- &7Продать всё'
+    slot: 20
+    left_click_commands:
+      - '[player] skript-sell BEEF 64 250'
+    right_click_commands:
+      - '[player] skript-sellall BEEF 64 250'
+
+  sell_pork:
+    material: PORKCHOP
+    amount: 64
+    display_name: '&aСырая свинина'
+    lore:
+      - ''
+      - '&7Сдать &fx64 &7свинины'
+      - '&7Выручка: &a+250%currency%'
+      - ''
+      - '&eЛКМ &8- &7Продать стак'
+      - '&6ПКМ &8- &7Продать всё'
+    slot: 21
+    left_click_commands:
+      - '[player] skript-sell PORKCHOP 64 250'
+    right_click_commands:
+      - '[player] skript-sellall PORKCHOP 64 250'
+
+  sell_leather:
+    material: LEATHER
+    amount: 64
+    display_name: '&aКожа'
+    lore:
+      - ''
+      - '&7Сдать &fx64 &7кожи'
+      - '&7Выручка: &a+300%currency%'
+      - ''
+      - '&eЛКМ &8- &7Продать стак'
+      - '&6ПКМ &8- &7Продать всё'
+    slot: 22
+    left_click_commands:
+      - '[player] skript-sell LEATHER 64 300'
+    right_click_commands:
+      - '[player] skript-sellall LEATHER 64 300'
+
+  buy_cow_egg:
+    material: COW_SPAWN_EGG
+    display_name: '&eЯйцо призыва Коровы'
+    lore:
+      - ''
+      - '&7Позволяет быстро начать'
+      - '&7разведение животных.'
+      - '&7Цена: &c-500%currency%'
+      - ''
+      - '&aНажми, чтобы купить'
+    slot: 24
+    click_commands:
+      - '[player] skript-buy COW_SPAWN_EGG 1 500'
+
+  buy_pig_egg:
+    material: PIG_SPAWN_EGG
+    display_name: '&dЯйцо призыва Свиньи'
+    lore:
+      - ''
+      - '&7Позволяет быстро начать'
+      - '&7разведение животных.'
+      - '&7Цена: &c-500%currency%'
+      - ''
+      - '&aНажми, чтобы купить'
+    slot: 25
+    click_commands:
+      - '[player] skript-buy PIG_SPAWN_EGG 1 500'
+
+  # === НАВИГАЦИЯ ===
   back_to_main:
     material: ARROW
     display_name: '&e&l← ГЛАВНОЕ МЕНЮ'
