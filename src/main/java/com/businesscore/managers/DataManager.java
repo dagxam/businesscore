@@ -28,6 +28,8 @@ public class DataManager {
 
     // Gender group tracking (UUID -> group)
     private final Map<String, String> genderGroup = new ConcurrentHashMap<>();
+    // Explicit gender storage (UUID -> "male"/"female"/"none")
+    private final Map<String, String> playerGender = new ConcurrentHashMap<>();
 
     // Generic counters for mobs where N kills = 1 point (UUID -> (mobKey -> killsCount))
     private final Map<String, Map<String, Integer>> mobKillCounters = new ConcurrentHashMap<>();
@@ -101,10 +103,15 @@ public class DataManager {
             }
         }
 
-        // Load gender group
+        // Load gender group & explicit gender
         if (data.isConfigurationSection("genderGroup")) {
             for (String uuid : data.getConfigurationSection("genderGroup").getKeys(false)) {
                 genderGroup.put(uuid, data.getString("genderGroup." + uuid));
+            }
+        }
+        if (data.isConfigurationSection("playerGender")) {
+            for (String uuid : data.getConfigurationSection("playerGender").getKeys(false)) {
+                playerGender.put(uuid, data.getString("playerGender." + uuid));
             }
         }
 
@@ -124,6 +131,7 @@ public class DataManager {
         for (var e : spiderKills.entrySet()) data.set("spiderKills." + e.getKey(), e.getValue());
         for (var e : diamondMined.entrySet()) data.set("diamondMined." + e.getKey(), e.getValue());
         for (var e : genderGroup.entrySet()) data.set("genderGroup." + e.getKey(), e.getValue());
+        for (var e : playerGender.entrySet()) data.set("playerGender." + e.getKey(), e.getValue());
 
         try {
             data.save(dataFile);
@@ -166,12 +174,16 @@ public class DataManager {
     public void setDiamondMined(String uuid, int val) { diamondMined.put(uuid, val); }
     public void addDiamondMined(String uuid) { diamondMined.merge(uuid, 1, Integer::sum); }
 
-    // ── Gender group ──
+    // ── Gender tracking ──
     public String getGenderGroup(String uuid) { return genderGroup.get(uuid); }
     public void setGenderGroup(String uuid, String group) { genderGroup.put(uuid, group); }
     public void removeGenderGroup(String uuid) { genderGroup.remove(uuid); }
+    
+    public String getPlayerGender(String uuid) { return playerGender.getOrDefault(uuid, "none"); }
+    public void setPlayerGender(String uuid, String gender) { playerGender.put(uuid, gender); }
+    public void removePlayerGender(String uuid) { playerGender.remove(uuid); }
 
-    // ── Generic mob kill counters (in-memory; used for 2-kills-for-1-point, etc.) ──
+    // ── Generic mob kill counters ──
     public int getMobKillCounter(String uuid, String mobKey) {
         Map<String, Integer> m = mobKillCounters.get(uuid);
         if (m == null) return 0;
