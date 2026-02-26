@@ -27,26 +27,22 @@ public class PlaceholderHook extends PlaceholderExpansion {
         String sym = plugin.getCurrencySymbol();
 
         return switch (params.toLowerCase()) {
-            // Legacy compatibility: %businesscore_money%
             case "money", "skript_money" ->
                     String.valueOf(plugin.getEconomyManager().getBalance(player));
 
-            // %businesscore_balance% (with symbol)
             case "balance", "skript_balance" ->
                     plugin.getEconomyManager().getBalance(player) + sym;
 
-            // %businesscore_points%, %businesscore_rs_points%
             case "points", "rs_points" ->
                     String.valueOf(plugin.getDataManager().getPoints(uuid));
 
-            // %businesscore_gender%, %businesscore_rs_gender%
             case "gender", "rs_gender" -> {
-                if (player.hasPermission("gender.male")) yield "§b§l♂";
-                else if (player.hasPermission("gender.female")) yield "§d§l♀";
+                String g = plugin.getDataManager().getPlayerGender(uuid);
+                if (g.equals("male")) yield "§b§l♂";
+                else if (g.equals("female")) yield "§d§l♀";
                 else yield "§7?";
             }
 
-            // %businesscore_rank%
             case "rank" -> plugin.getDataManager().getRank(uuid);
 
             default -> null;
