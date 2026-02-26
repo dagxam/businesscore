@@ -27,14 +27,11 @@ public class GenderManager {
     }
 
     public String getPlayerGender(Player p) {
-        if (p.hasPermission("gender.male")) return "male";
-        if (p.hasPermission("gender.female")) return "female";
-        return "none";
+        return plugin.getDataManager().getPlayerGender(p.getUniqueId().toString());
     }
 
     public void setSkinByGroup(Player p) {
         if (!plugin.isSkinsRestorerAvailable()) {
-            // We can not reliably change skins without a dedicated skin plugin.
             return;
         }
         String group = getPlayerGroup(p);
@@ -46,8 +43,7 @@ public class GenderManager {
             skinName = plugin.getConfig().getString("skins.default." + gender, "Steve");
         }
 
-        String cmdTemplate = plugin.getConfig().getString("skin-set-cmd",
-                "skin set %skin% %player%");
+        String cmdTemplate = plugin.getConfig().getString("skin-set-cmd", "skin set %skin% %player%");
         String cmd = cmdTemplate
                 .replace("%skin%", skinName)
                 .replace("%player%", p.getName());
@@ -56,18 +52,20 @@ public class GenderManager {
     }
 
     public void selectGender(Player p, String gender) {
-        if (p.hasPermission("gender.selected")) {
+        String uuid = p.getUniqueId().toString();
+
+        if (!plugin.getDataManager().getPlayerGender(uuid).equals("none")) {
             p.sendMessage(color("&c&l✖ &cТы уже выбрал пол! Смена невозможна."));
             return;
         }
 
         var console = Bukkit.getConsoleSender();
         String name = p.getName();
-        String uuid = p.getUniqueId().toString();
 
-        // Remember player's group at the moment of selection (used by SkinUpdateTask)
         plugin.getDataManager().setGenderGroup(uuid, getPlayerGroup(p));
+        plugin.getDataManager().setPlayerGender(uuid, gender.toLowerCase());
 
+        // Ставим пермы как раньше для обратной совместимости других плагинов
         if (gender.equalsIgnoreCase("male")) {
             Bukkit.dispatchCommand(console, "lp user " + name + " permission set gender.male true");
             Bukkit.dispatchCommand(console, "lp user " + name + " permission set gender.selected true");
@@ -75,9 +73,6 @@ public class GenderManager {
             Bukkit.dispatchCommand(console, "lp user " + name + " permission set skinsrestorer.command.set.url false");
             Bukkit.dispatchCommand(console, "lp user " + name + " meta setprefix 1 \"&b♂ \"");
             p.sendMessage(color("&a&l✔ Ты выбрал мужской пол!"));
-
-            Bukkit.getScheduler().runTaskLater(plugin, () -> setSkinByGroup(p), 20L);
-            Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getTabManager().updatePlayer(p), 1L);
 
         } else if (gender.equalsIgnoreCase("female")) {
             Bukkit.dispatchCommand(console, "lp user " + name + " permission set gender.female true");
@@ -87,17 +82,20 @@ public class GenderManager {
             Bukkit.dispatchCommand(console, "lp user " + name + " meta setprefix 1 \"&d♀ \"");
             p.sendMessage(color("&d&l✔ Ты выбрала женский пол!"));
 
-            Bukkit.getScheduler().runTaskLater(plugin, () -> setSkinByGroup(p), 20L);
-            Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getTabManager().updatePlayer(p), 1L);
-
         } else {
             p.sendMessage(color("&c&l✖ &cИспользуй: /selectgender male или /selectgender female"));
+            plugin.getDataManager().removePlayerGender(uuid); // revert
+            return;
         }
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> setSkinByGroup(p), 20L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getTabManager().updatePlayer(p), 1L);
     }
 
     public void resetGender(Player target) {
         var console = Bukkit.getConsoleSender();
         String name = target.getName();
+        String uuid = target.getUniqueId().toString();
 
         Bukkit.dispatchCommand(console, "lp user " + name + " permission unset gender.selected");
         Bukkit.dispatchCommand(console, "lp user " + name + " permission unset gender.male");
@@ -105,8 +103,15 @@ public class GenderManager {
         Bukkit.dispatchCommand(console, "lp user " + name + " permission unset skinsrestorer.command.set");
         Bukkit.dispatchCommand(console, "lp user " + name + " permission unset skinsrestorer.command.set.url");
         Bukkit.dispatchCommand(console, "lp user " + name + " meta removeprefix 1");
+        Bukkit.dispatchCommand(console, "lp user " + name + " permission unset gender.menu.opened");
 
-        plugin.getDataManager().removeGenderGroup(target.getUniqueId().toString());
-        plugin.getTabManager().updatePlayer(target);
+        plugin.getDataManager().removeGenderGroup(uuid);
+        plugin.getDataManager().removePlayerGender(uuid);
+
+        if (plugin.isSkinsRestorerAvailable()) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "skin clear " + name);
+        }
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getTabManager().updatePlayer(target), 10L);
     }
 }
