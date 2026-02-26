@@ -21,11 +21,11 @@ tab:
   prefix: "&7[%rank_name%&7] &f"
   suffix: " &7| &e%points%⭐ &7| &6%balance%💰"
 
-  # верх TAB (можешь оставить просто BUSINESSCORE)
+  # верх TAB 
   header: "&6&lBUSINESSCORE"
 
-  # низ TAB (СНИЗУ) -> ДЕНЬГИ
-  footer: "&7Баланс: &6%skript_balance%%currency%"
+  # низ TAB (оставляем пустым, чтобы убрать нижний баланс)
+  footer: ""
 
 
 # ─── Economy ───
@@ -52,6 +52,9 @@ vip-shop-groups:
 
 # ─── Rank thresholds ───
 ranks:
+  default:
+    points: 0
+    display: "&7&lНовичок"
   resident:
     points: 20
     display: "&a&lЖитель"
