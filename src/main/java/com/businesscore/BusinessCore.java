@@ -208,14 +208,11 @@ public class BusinessCore extends JavaPlugin {
         }
 
         if (player != null) {
-            String g;
-            if (player.hasPermission("gender.male")) g = "§b§l♂";
-            else if (player.hasPermission("gender.female")) g = "§d§l♀";
-            else g = "§7?";
+            String gStr = dataManager.getPlayerGender(player.getUniqueId().toString());
+            String g = gStr.equals("male") ? "§b§l♂" : (gStr.equals("female") ? "§d§l♀" : "§7?");
             out = out.replace("%businesscore_gender%", g);
         }
 
-        // Если PlaceholderAPI установлен — применяем дополнительно (но не обязателен)
         if (placeholderApiAvailable && player != null && out.contains("%")) {
             try {
                 Class<?> papi = Class.forName("me.clip.placeholderapi.PlaceholderAPI");
@@ -225,7 +222,6 @@ public class BusinessCore extends JavaPlugin {
 
         return out;
     }
-
     public static String color(String msg) {
         if (msg == null) return "";
         return msg.replace("&", "§");
